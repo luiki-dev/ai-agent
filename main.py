@@ -1,31 +1,47 @@
+import argparse
 import os
+from argparse import Namespace
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
+# parse .env file and load them as environment variables
 load_dotenv()
 
-api_key = os.environ.get("OPENROUTER_API_KEY")
-base_url = os.environ.get("OPENAI_BASE_URL")
 
-if api_key == "" or api_key == None:
-    raise RuntimeError("API key not found/loaded!  ")
+def parse_arguments() -> Namespace:
+    parser = argparse.ArgumentParser(description="=== AI Agent ===")
+    parser.add_argument("user_prompt", type=str, help="User prompt")
+    return parser.parse_args()
 
 
-client = OpenAI(
-    base_url=base_url,
-    api_key=api_key,
-)
+def initialize_client() -> OpenAI:
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    base_url = os.environ.get("OPENAI_BASE_URL")
+
+    if api_key == "" or api_key == None:
+        raise RuntimeError("API key not found/loaded!  ")
+
+    return OpenAI(
+        base_url=base_url,
+        api_key=api_key,
+    )
 
 
 def main():
     print("Hello from ai-agent!")
 
+    args = parse_arguments()
+
+    user_prompt = args.user_prompt
+
     ai_model: str = str(os.environ.get("AI_MODEL"))
+    client = initialize_client()
+
     messages = [
         {
             "role": "user",
-            "content": "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.",
+            "content": user_prompt,
         }
     ]
 
