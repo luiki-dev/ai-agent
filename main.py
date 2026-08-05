@@ -28,6 +28,28 @@ def initialize_client() -> OpenAI:
     )
 
 
+def get_response(client: OpenAI, model: str, prompt: str) -> str:
+    messages = [
+        {
+            "role": "user",
+            "content": prompt,
+        }
+    ]
+
+    print(f"User prompt: {messages[0]['content']}")
+    return client.chat.completions.create(model=model, messages=messages)  # type: ignore
+
+
+def process_response(response) -> None:
+    if response.usage != None:
+        print(f"Prompt tokens: {response.usage.prompt_tokens}")
+        print(f"Response tokens: {response.usage.completion_tokens}")
+    else:
+        raise RuntimeError("Empty 'usage' in response!")
+
+    print(f"Response: {response.choices[0].message.content}")
+
+
 def main():
     print("Hello from ai-agent!")
 
@@ -38,23 +60,7 @@ def main():
     ai_model: str = str(os.environ.get("AI_MODEL"))
     client = initialize_client()
 
-    messages = [
-        {
-            "role": "user",
-            "content": user_prompt,
-        }
-    ]
-
-    print(f"User prompt: {messages[0]['content']}")
-    response = client.chat.completions.create(model=ai_model, messages=messages)  # type: ignore
-
-    if response.usage != None:
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
-    else:
-        raise RuntimeError("Empty 'usage' in response!")
-
-    print(f"Response: {response.choices[0].message.content}")
+    process_response(get_response(client, ai_model, user_prompt))
 
 
 if __name__ == "__main__":
