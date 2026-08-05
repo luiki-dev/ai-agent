@@ -28,7 +28,15 @@ def main():
             "content": "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.",
         }
     ]
+
+    print(f"User prompt: {messages[0]['content']}")
     response = client.chat.completions.create(model=ai_model, messages=messages)  # type: ignore
+
+    if response.usage != None:
+        print(f"Prompt tokens: {response.usage.prompt_tokens}")
+        print(f"Response tokens: {response.usage.completion_tokens}")
+    else:
+        raise RuntimeError("Empty 'usage' in response!")
 
     print(f"Response: {response.choices[0].message.content}")
 
