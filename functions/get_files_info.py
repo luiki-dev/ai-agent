@@ -1,25 +1,24 @@
-import os
+from pathlib import Path
 
 
 def get_files_info(working_directory: str, directory: str = ".") -> str:
     try:
-        absolute_path_working_directory = os.path.abspath(working_directory)
-        target_directory_path = os.path.normpath(
-            os.path.join(absolute_path_working_directory, directory)
-        )
+        absolute_path_working_directory = Path(working_directory).resolve()
+        target_directory_path = (
+            absolute_path_working_directory / directory
+        ).resolve()
 
+        # check wether directory is in working directory
         target_directory_valid = (
-            os.path.commonpath(
-                [absolute_path_working_directory, target_directory_path]
-            )
-            == absolute_path_working_directory
+            target_directory_path == absolute_path_working_directory
+            or absolute_path_working_directory in target_directory_path.parents
         )
 
         if not target_directory_valid:
             return f'Error: Cannot list "{directory}"'
             "as it is outside the permitted working directory"
 
-        if not os.path.isdir(target_directory_path):
+        if not target_directory_path.is_dir():
             return f'Error: "{directory}" is not a directory'
 
         return f'Success: "{directory}" is within the working directory'
