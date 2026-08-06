@@ -1,12 +1,11 @@
 import argparse
-import json
 import os
 from argparse import Namespace
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 from prompts import system_prompt
 
 # parse .env file and load them as environment variables
@@ -66,10 +65,10 @@ def process_response(response) -> None:
     message = response.choices[0].message
     if message.tool_calls:
         for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(
-                f"Calling function: {tool_call.function.name}({function_args})"
-            )
+            result_message = call_function(tool_call, verbose)
+
+            if verbose:
+                print(f"-> {result_message['content']}")
     else:
         print(f"Response: {response.choices[0].message.content}")
 
