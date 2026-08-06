@@ -1,12 +1,12 @@
 from pathlib import Path
 
 from config import MAX_CHARS_TO_SEND_TO_LLM
-from utils.file_utils import get_file
+from utils.file_utils import File_mode, get_file
 
 
 def get_file_content(working_directory: str, file_path: str) -> str:
     try:
-        file: Path = get_file(working_directory, file_path)
+        file: Path = get_file(working_directory, File_mode.READ, file_path)
 
         return get_content(file)
     except Exception as e:  # noqa: BLE001
