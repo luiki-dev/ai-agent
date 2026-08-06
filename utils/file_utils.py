@@ -5,6 +5,7 @@ from pathlib import Path
 class File_mode(Enum):
     READ = "read"
     WRITE = "write"
+    EXECUTTE = "execute"
 
 
 def get_directory(working_directory: str, directory: str = ".") -> Path:
@@ -29,7 +30,12 @@ def get_directory(working_directory: str, directory: str = ".") -> Path:
     return directory_path
 
 
-def get_file(working_directory: str, mode: File_mode, file: str = ".") -> Path:
+def get_file(
+    working_directory: str,
+    mode: File_mode,
+    file: str,
+    accepted_extention: tuple[str, str] = ("*", "<any>"),
+) -> Path:
     absolute_path_working_directory = Path(working_directory).resolve()
     file_path = (absolute_path_working_directory / file).resolve()
 
@@ -54,9 +60,19 @@ def get_file(working_directory: str, mode: File_mode, file: str = ".") -> Path:
             case File_mode.WRITE:
                 if file_path.is_dir():
                     raise Exception(  # noqa: TRY002
-                        f'Cannot write to "{file}" as it is a directory'
+                        f'Cannot {mode.value} to "{file}" as it is a directory'
                     )
                 file_path.parent.mkdir(parents=True, exist_ok=True)
+            case File_mode.EXECUTTE:
+                raise Exception(  # noqa: TRY002
+                    f'"{file}" does not exist or is not a regular file'
+                )
+
+    if (
+        accepted_extention[0] != "*"
+        and file_path.suffix != accepted_extention[0]
+    ):
+        raise Exception(f'"{file}" is not a {accepted_extention[1]} file')  # noqa: TRY002
 
     return file_path
 
