@@ -5,6 +5,9 @@ from argparse import Namespace
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from functions.call_function import available_functions, call_function
+from prompts import system_prompt
+
 # parse .env file and load them as environment variables
 load_dotenv()
 
@@ -35,15 +38,20 @@ def initialize_client() -> OpenAI:
 
 def get_response(client: OpenAI, model: str, prompt: str) -> str:
     messages = [
-        {
-            "role": "user",
-            "content": prompt,
-        }
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
     ]
 
     if verbose:
-        print(f"User prompt: {messages[0]['content']}")
-    return client.chat.completions.create(model=model, messages=messages)  # type: ignore
+        for message in messages:
+            print(f"User prompt: {message['content']}")
+
+    return client.chat.completions.create(
+        model=model,
+        messages=messages,  # type: ignore
+        tools=available_functions,  # type: ignore
+        temperature=0,
+    )
 
 
 def process_response(response) -> None:
@@ -51,10 +59,19 @@ def process_response(response) -> None:
         if verbose:
             print(f"Prompt tokens: {response.usage.prompt_tokens}")
             print(f"Response tokens: {response.usage.completion_tokens}")
+            print(f"LLM model: {response.model}")
     else:
         raise RuntimeError("Empty 'usage' in response!")
 
-    print(f"Response: {response.choices[0].message.content}")
+    message = response.choices[0].message
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            result_message = call_function(tool_call, verbose)
+
+            if verbose:
+                print(f"-> {result_message['content']}")
+    else:
+        print(f"Response: {response.choices[0].message.content}")
 
 
 def main():
@@ -65,10 +82,13 @@ def main():
     global verbose
     verbose = args.verbose
 
-    ai_model: str = str(os.environ.get("AI_MODEL"))
-    client = initialize_client()
+    try:
+        ai_model: str = str(os.environ.get("AI_MODEL"))
+        client = initialize_client()
 
-    process_response(get_response(client, ai_model, user_prompt))
+        process_response(get_response(client, ai_model, user_prompt))
+    except Exception as e:
+        print(f"ERROR: {e}")
 
 
 if __name__ == "__main__":
