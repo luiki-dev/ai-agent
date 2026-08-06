@@ -51,6 +51,7 @@ def get_response(client: OpenAI, model: str, prompt: str) -> str:
         model=model,
         messages=messages,  # type: ignore
         tools=available_functions,  # type: ignore
+        temperature=0,
     )
 
 

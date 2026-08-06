@@ -3,6 +3,24 @@ from pathlib import Path
 from config import MAX_CHARS_TO_SEND_TO_LLM
 from utils.file_utils import File_mode, get_file
 
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Gets content of specified file, relative to working directory",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "required": "true",
+                    "description": "Path to the file, relative to working directory, to get contents of",
+                },
+            },
+        },
+    },
+}
+
 
 def get_file_content(working_directory: str, file_path: str) -> str:
     try:

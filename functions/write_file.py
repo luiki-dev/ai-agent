@@ -3,6 +3,29 @@ from pathlib import Path
 import utils.file_utils
 from utils.file_utils import File_mode, get_file
 
+schema_write_file = {
+    "type": "function",
+    "function": {
+        "name": "write_file",
+        "description": "Writes provided content to the file specified by path relative to working directory",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "required": "true",
+                    "description": "Path to the file, relative to working directory, to write content to",
+                },
+                "content": {
+                    "type": "string",
+                    "required": "true",
+                    "description": "Content to be written in the file",
+                },
+            },
+        },
+    },
+}
+
 
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     try:
