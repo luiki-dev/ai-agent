@@ -5,6 +5,8 @@ from argparse import Namespace
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from prompts import system_prompt
+
 # parse .env file and load them as environment variables
 load_dotenv()
 
@@ -35,14 +37,14 @@ def initialize_client() -> OpenAI:
 
 def get_response(client: OpenAI, model: str, prompt: str) -> str:
     messages = [
-        {
-            "role": "user",
-            "content": prompt,
-        }
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
     ]
 
     if verbose:
-        print(f"User prompt: {messages[0]['content']}")
+        for message in messages:
+            print(f"User prompt: {message['content']}")
+
     return client.chat.completions.create(model=model, messages=messages)  # type: ignore
 
 
