@@ -59,6 +59,7 @@ def process_response(response) -> None:
         if verbose:
             print(f"Prompt tokens: {response.usage.prompt_tokens}")
             print(f"Response tokens: {response.usage.completion_tokens}")
+            print(f"LLM model: {response.model}")
     else:
         raise RuntimeError("Empty 'usage' in response!")
 
@@ -81,10 +82,13 @@ def main():
     global verbose
     verbose = args.verbose
 
-    ai_model: str = str(os.environ.get("AI_MODEL"))
-    client = initialize_client()
+    try:
+        ai_model: str = str(os.environ.get("AI_MODEL"))
+        client = initialize_client()
 
-    process_response(get_response(client, ai_model, user_prompt))
+        process_response(get_response(client, ai_model, user_prompt))
+    except Exception as e:
+        print(f"ERROR: {e}")
 
 
 if __name__ == "__main__":
