@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from functions.get_directory import get_directory
+from utils.file_utils import get_directory
 
 
 def get_files_info(working_directory: str, directory: str = ".") -> str:
