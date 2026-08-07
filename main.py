@@ -6,8 +6,7 @@ from argparse import Namespace
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from functions import call_function
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 from prompts import system_prompt
 
 # parse .env file and load them as environment variables
