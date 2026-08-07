@@ -30,40 +30,40 @@ def call_function(tool_call, verbose: bool = False) -> dict:
     function_args["working_directory"] = WORKING_DIRECTORY
 
     if verbose:
-        print(f" - Calling function: {function_name}({function_args})")
+        print(f"###>>>  - Calling function: {function_name}({function_args})")
     else:
-        print(f" - Calling function: {function_name}")
+        print(f"###>>>  - Calling function: {function_name}")
 
     function_to_call = function_map[function_name]
     if function_to_call:
         try:
             result = function_to_call(**function_args)
-            return get_function_result_response(tool_call_id, result)
+            return get_function_result_tool_message(tool_call_id, result)
         except Exception as e:  # noqa: BLE001
-            return get_call_error_response(tool_call, function_name, e)
+            return get_call_error_tool_message(tool_call, function_name, e)
 
     else:
-        return get_function_not_found_response(tool_call_id, function_name)
+        return get_function_not_found_tool_message(tool_call_id, function_name)
 
 
-def get_function_not_found_response(
+def get_function_not_found_tool_message(
     tool_call_id: str, function_name: str
 ) -> dict[str, str]:
-    return get_function_result_response(
+    return get_function_result_tool_message(
         tool_call_id, f"Error: Unknown function: {function_name}"
     )
 
 
-def get_call_error_response(
+def get_call_error_tool_message(
     tool_call_id: str, function_name: str, exception: Exception
 ) -> dict[str, str]:
-    return get_function_result_response(
+    return get_function_result_tool_message(
         tool_call_id,
         f"Error: Exception during '{function_name}' call: {exception}",
     )
 
 
-def get_function_result_response(
+def get_function_result_tool_message(
     tool_call_id: str, content: str
 ) -> dict[str, str]:
     return {

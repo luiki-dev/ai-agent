@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from argparse import Namespace
 
 from dotenv import load_dotenv
@@ -36,16 +37,7 @@ def initialize_client() -> OpenAI:
     )
 
 
-def get_response(client: OpenAI, model: str, prompt: str) -> str:
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompt},
-    ]
-
-    if verbose:
-        for message in messages:
-            print(f"User prompt: {message['content']}")
-
+def get_response(client: OpenAI, model: str, messages) -> str:
     return client.chat.completions.create(
         model=model,
         messages=messages,  # type: ignore
@@ -54,24 +46,33 @@ def get_response(client: OpenAI, model: str, prompt: str) -> str:
     )
 
 
-def process_response(response) -> None:
+def process_response(response) -> tuple[list[object], bool]:
     if response.usage != None:
         if verbose:
-            print(f"Prompt tokens: {response.usage.prompt_tokens}")
-            print(f"Response tokens: {response.usage.completion_tokens}")
-            print(f"LLM model: {response.model}")
+            print(f"###>>> Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"###>>> Response tokens: {response.usage.completion_tokens}")
+            print(f"###>>> LLM model: {response.model}")
     else:
         raise RuntimeError("Empty 'usage' in response!")
 
     message = response.choices[0].message
+    result_messages = []
+    result_messages.append(message)
+
+    end_conversation = False
     if message.tool_calls:
         for tool_call in message.tool_calls:
-            result_message = call_function(tool_call, verbose)
+            result_message = call_function(tool_call, verbose)  # type: ignore
+            result_messages.append(result_message)
+            end_conversation = False
 
             if verbose:
-                print(f"-> {result_message['content']}")
+                print(f"###>>> -> {result_message['content']}")
     else:
-        print(f"Response: {response.choices[0].message.content}")
+        print(f"###>>> RESPONSE: {response.choices[0].message.content}")
+        end_conversation = True
+
+    return result_messages, end_conversation
 
 
 def main():
@@ -82,13 +83,39 @@ def main():
     global verbose
     verbose = args.verbose
 
-    try:
-        ai_model: str = str(os.environ.get("AI_MODEL"))
-        client = initialize_client()
+    ai_model: str = str(os.environ.get("AI_MODEL"))
+    client = initialize_client()
 
-        process_response(get_response(client, ai_model, user_prompt))
-    except Exception as e:
-        print(f"ERROR: {e}")
+    try:
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
+        if verbose:
+            print(f"###>>> User PROMPT: {user_prompt}")
+
+        finished_conversation = False
+
+        # limited conversation loop
+        for _ in range(20):
+            result_messages, end_conversation = process_response(
+                get_response(client, ai_model, messages)
+            )
+
+            if end_conversation:
+                finished_conversation = True
+                break
+
+            for result_message in result_messages:
+                messages.append(result_message)  # noqa: PERF402
+
+        if not finished_conversation:
+            print("###>>> EXCEEDED CONVERSATION LIMIT. TERMINATING!")
+            sys.exit(1)
+
+    except Exception as e:  # noqa: BLE001
+        print(f"###>>> MAIN ERROR: {e}")
 
 
 if __name__ == "__main__":
