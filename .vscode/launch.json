@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: main.py (uv)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "console": "integratedTerminal",
+            "args": ["--verbose","${input:userPrompt}"],
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "userPrompt",
+            "type": "promptString",
+            "description": "User prompt to pass to main.py"
+        }
+    ]
+}
